@@ -1,0 +1,10 @@
+#mirrors:
+#  my.company.registry:
+#    endpoint:
+#      - https://my.company.registry
+
+configs:
+  dkb.registry:
+    tls:
+      # we will mount "my-company-root.pem" in the /etc/ssl/certs/ directory.
+      ca_file: "/etc/ssl/certs/my-company-root.pem"
