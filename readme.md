@@ -1,4 +1,4 @@
-# Motivatio
+# Motivation
 This tutorial is about:
 * Shipping an application as Docker Container
 * Creating of a Kubernetes Cluster (in Docker)
@@ -6,7 +6,7 @@ This tutorial is about:
   * WIP - Requests will hit different **pods** randomly
 
 
-# Node JS App
+# NodeJS App
 Create a new directory where all the files would live. 
 ## NodeJS App
 Starts up an HTTP server on port 8080.
