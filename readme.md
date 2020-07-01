@@ -1,3 +1,11 @@
+# Motivatio
+This tutorial is about:
+* Shipping an application as Docker Container
+* Creating of a Kubernetes Cluster (in Docker)
+* Access the Application with curl
+  * WIP - Requests will hit different **pods** randomly
+
+
 # Node JS App
 Create a new directory where all the files would live. 
 ## NodeJS App
@@ -79,63 +87,92 @@ Remove the container
 docker rm kubia-container
 ```
 
-# k3d - k3s as docker
-
-k3d create --name="mydemo" --workers="2" --publish="80:80"
-k3d get kubeconfig mydemo --switch
-kubectl get nodes
-
-k3d stop --name=mydemo
-
-
-## kubectl
-kubectl config view
-
-# deploy
-kubectl run kubia --image=kubia --port=8080 --generator=run/v1
-kubectl expose rc kubia --type=LoadBalancer --name kubia-http
-
-
-# stackoverflow
-
-k3d create cluster mydemocluster --workers="2" --publish="80:80"
-
---k3d get kubeconfig mydemocluster --switch
-export KUBECONFIG="$(k3d get-kubeconfig --name='mydemocluster')"
-
-kubectl run kubia --image=hello-world --port=8080 --generator=run/v1
-kubectl expose rc kubia --type=LoadBalancer --name kubia-http
-
-export KUBECONFIG="$(k3d get-kubeconfig --name='mydemocluster')"
-
---- 3
-
-
----
+# k3d - k3s as docker - k8s in docker
+## install k3d
+```
 curl -s https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v3.0.0-rc.6 bash
 v3.0.0-rc.6
+```
 
+## k3d - create cluster
+```
+k3d create --name="mydemo" --workers="2" --publish="80:80"
+```
+```
+k3d get kubeconfig mydemo --switch
+```
+```
+kubectl get nodes
+```
 
-# Create a Cluster
-## info "Cluster Name: demo"
-## info "--api-port 6550: expose the Kubernetes API on localhost:6550 (via loadbalancer)"
-## info "--masters 1: create 1 master node"
-## info "--workers 3: create 3 worker nodes"
-## info "--port 8080:80@loadbalancer: map localhost:8080 to port 80 on the loadbalancer (used for ingress)"
-## info "--volume /tmp/src:/src@all: mount the local directory /tmp/src to /src in all nodes (used for code)"
-## info "--wait: wait for all master nodes to be up before returning"
+```
+k3d stop --name=mydemo
+```
 
-`k3d create cluster democluster --api-port 6550 --masters 1 --workers 3 --port 8080:80@loadbalancer`
+## kubectl
+```
+kubectl config view
+```
 
-# Update the default kubeconfig with the new cluster details
-`k3d get kubeconfig democluster --update --switch`
+# kubectl - deploy
 
-# Use kubectl to checkout the nodes
-`kubectl get nodes`
+```
+kubectl run kubia --image=kubia --port=8080 --generator=run/v1
 
-
-kubectl run kubia --image=kubia --port=8080 --generator=run-pod/v1
 kubectl expose rc kubia --type=LoadBalancer --name kubia-http
+```
+
+# k3d - create a cluster with loadbalancer
+* cluster name: democluster
+* --api-port 6550: expose the Kubernetes API on localhost:6550 (via loadbalancer)
+* --masters 1: create 1 master node
+* --workers 3: create 3 worker nodes
+* --port 8080:80@loadbalancer: map localhost:8080 to port 80 on the loadbalancer (used for ingress)
+* --volume /tmp/src:/src@all: mount the local directory /tmp/src to /src in all nodes (used for code)
+* --wait: wait for all master nodes to be up before returning
+
+```
+k3d create cluster democluster --api-port 6550 --masters 1 --workers 3 --port 8080:80@loadbalancer 
+```
+
+## Update the default kubeconfig with the new cluster details
+```
+k3d get kubeconfig democluster --update --switch
+```
+
+## Use kubectl to checkout the nodes
+
+```
+kubectl get nodes
+```
+
+```
+kubectl run kubia --image=kubia --port=8080 --generator=run-pod/v1
+
+kubectl expose rc kubia --type=LoadBalancer --name kubia-http
+```
+
+# External IP Address of Pods
+## Why we need services
+* **Pods** are ephemeral
+  * a pod may disappear at anytime
+  * f.e. a node where the pod is running crashed
+  * or someone deleted the pod
+  * a missing *pod* is replaced with a new one by **ReplicationController**
+  * this **new pod** gets a new IP address
+  * **services** come in to solve the problem of everchanging pod IP and port IP.
+### Services
+* Created services get a static IP, which never changes during its lifetime
+* clients should connect to service instead of connecting to pods directly
+* services make sure that one of the pods get the connection
+Services represent a static location for a group of one or more pods that all provide the same service.
+Requests comming from the IP and port of the service will be forwarded to the IP and port of one of the pods belonging to the service at that moment.
 
 
-k3d create cluster democluster --api-port 6550 --masters 1 --workers 3 --port 8080:80@loadbalancer --volume /Users/nodirbekusmanov/workspace/k8s-playground/registries.yaml:/etc/rancher/k3s/registries.yaml --volume /Users/nodirbekusmanov/workspace/k8s-playground/ZscalerRootCA.cer:/etc/ssl/certs/ZscalerRootCA.cer
+
+
+
+# Delete your cluster
+```
+k3d delete --name democluster
+```
